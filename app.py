@@ -25,19 +25,44 @@ FRUIT_CLASSES = [
 
 MOLD_CLASSES = ['Mold', 'No mold']
 
+# ── Model verification ────────────────────────────────────────────────────────
+def verify_models():
+    issues = []
+    for path, label in [(MULTICLASS_MODEL_PATH, "Multiclass"), (BINARY_MODEL_PATH, "Binary")]:
+        if not os.path.exists(path):
+            issues.append(f"❌ {label} model file not found: `{path}`")
+        else:
+            size_mb = os.path.getsize(path) / (1024 * 1024)
+            issues.append(f"✅ {label} model found: `{path}` ({size_mb:.1f} MB)")
+    return issues
+
 # ── Load models ───────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_models():
     multiclass_model = tf.keras.models.load_model(MULTICLASS_MODEL_PATH)
     binary_model     = tf.keras.models.load_model(BINARY_MODEL_PATH)
+
+    # Verify output shapes match expectations
+    # Multiclass: should output 11 classes
+    # Binary: should output 1 (sigmoid)
+    mc_output_shape  = multiclass_model.output_shape
+    bin_output_shape = binary_model.output_shape
+
+    if mc_output_shape[-1] != 11:
+        raise ValueError(
+            f"Multiclass model output shape is {mc_output_shape} — "
+            f"expected 11 classes. Wrong model file may be loaded."
+        )
+    if bin_output_shape[-1] != 1:
+        raise ValueError(
+            f"Binary model output shape is {bin_output_shape} — "
+            f"expected 1 output (sigmoid). Wrong model file may be loaded."
+        )
+
     return multiclass_model, binary_model
 
 # ── Preprocessing ─────────────────────────────────────────────────────────────
 def preprocess(image: Image.Image) -> np.ndarray:
-    """
-    Resize to 224x224, convert to RGB, apply DenseNet121 preprocess_input.
-    Same preprocessing used during training for both models.
-    """
     from tensorflow.keras.applications.densenet import preprocess_input
     image = image.convert("RGB")
     image = image.resize((224, 224))
@@ -56,6 +81,12 @@ st.markdown(
 
 st.divider()
 
+# ── Model status sidebar ──────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("### 🔍 Model Status")
+    for msg in verify_models():
+        st.markdown(msg)
+
 uploaded_file = st.file_uploader(
     "Upload an image", type=["jpg", "jpeg", "png", "bmp", "webp"]
 )
@@ -72,7 +103,17 @@ if uploaded_file is not None:
     with col2:
 
         with st.spinner("Loading models..."):
-            multiclass_model, binary_model = load_models()
+            try:
+                multiclass_model, binary_model = load_models()
+                st.sidebar.success("✅ Both models loaded successfully")
+            except ValueError as e:
+                st.sidebar.error(f"⚠️ Model mismatch: {e}")
+                st.error(f"Model loading failed: {e}")
+                st.stop()
+            except Exception as e:
+                st.sidebar.error(f"❌ Failed to load models: {e}")
+                st.error(f"Model loading failed: {e}")
+                st.stop()
 
         arr = preprocess(image)
 
@@ -88,7 +129,6 @@ if uploaded_file is not None:
         st.success(f"**{mc_label}**")
         st.caption(f"Confidence: {mc_conf:.1f}%")
 
-        # Top 3 predictions
         top3_idx  = np.argsort(mc_preds[0])[::-1][:3]
         st.markdown("**Top 3 predictions:**")
         for idx in top3_idx:
@@ -103,10 +143,8 @@ if uploaded_file is not None:
 
         with st.spinner("Checking for mould..."):
             bin_pred  = binary_model.predict(arr, verbose=0)
-            bin_prob  = float(bin_pred[0][0])   # sigmoid output
+            bin_prob  = float(bin_pred[0][0])
 
-            # class_indices: Mold=0, No mold=1
-            # sigmoid output close to 0 → Mold, close to 1 → No mold
             if bin_prob < 0.5:
                 bin_label = "Mold"
                 mold_conf = (1 - bin_prob) * 100
@@ -121,18 +159,15 @@ if uploaded_file is not None:
 
         st.caption(f"Confidence: {mold_conf:.1f}%")
 
-        # Probability bar
         st.markdown("**Mould probability:**")
         mold_probability = (1 - bin_prob) * 100
         st.progress(
             int(mold_probability),
-            text=f"Mold: {mold_probability:.1f}%  |  "
-                 f"No mold: {bin_prob * 100:.1f}%"
+            text=f"Mold: {mold_probability:.1f}%  |  No mold: {bin_prob * 100:.1f}%"
         )
 
     st.divider()
 
-    # ── Combined result ───────────────────────────────────────────────────────
     st.subheader("Summary")
 
     if bin_label == "Mold":
