@@ -13,10 +13,10 @@ st.set_page_config(
     layout="centered"
 )
 
-# ── Hugging Face model URLs (direct download links) ──────────────────────────
-# Convert blob links to raw/resolve links
-MULTICLASS_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_run1_best.keras"
-BINARY_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_best.keras"
+# ── Hugging Face model URLs (UPDATED with fixed models) ──────────────────────
+# NOTE: Changed from /blob/ to /resolve/ for direct download
+MULTICLASS_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_run1_best_fixed.keras"
+BINARY_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_best_fixed.keras"
 
 # ── Class labels ──────────────────────────────────────────────────────────────
 FRUIT_CLASSES = [
@@ -58,8 +58,8 @@ def load_models():
     
     try:
         # Download models from Hugging Face
-        multiclass_path = download_model(MULTICLASS_MODEL_URL, "densenet121_run1_best.keras")
-        binary_path = download_model(BINARY_MODEL_URL, "densenet121_binary_best.keras")
+        multiclass_path = download_model(MULTICLASS_MODEL_URL, "densenet121_run1_best_fixed.keras")
+        binary_path = download_model(BINARY_MODEL_URL, "densenet121_binary_best_fixed.keras")
         
         # Load models with compile=False to avoid compatibility issues
         multiclass_model = load_model(multiclass_path, compile=False)
@@ -69,15 +69,19 @@ def load_models():
         mc_output_shape = multiclass_model.output_shape
         bin_output_shape = binary_model.output_shape
         
+        st.sidebar.success(f"✅ Models loaded successfully!")
+        st.sidebar.text(f"Multiclass output: {mc_output_shape}")
+        st.sidebar.text(f"Binary output: {bin_output_shape}")
+        
         if mc_output_shape[-1] != 11:
             raise ValueError(
                 f"Multiclass model output shape is {mc_output_shape} — "
-                f"expected 11 classes. Wrong model file may be loaded."
+                f"expected 11 classes."
             )
         if bin_output_shape[-1] != 1:
             raise ValueError(
                 f"Binary model output shape is {bin_output_shape} — "
-                f"expected 1 output (sigmoid). Wrong model file may be loaded."
+                f"expected 1 output (sigmoid)."
             )
         
         return multiclass_model, binary_model
@@ -87,23 +91,24 @@ def load_models():
         st.error("Please check your internet connection and try again.")
         st.stop()
 
-# ── Model verification (updated for Hugging Face) ────────────────────────────
+# ── Model verification ────────────────────────────────────────────────────────
 def verify_models():
     issues = []
+    issues.append("🔗 Models will load from: huggingface.co/NdahTah/MoldTwoPhaseClassification")
+    issues.append("📦 Using fixed model files")
     
-    # Check if models are downloaded
-    for path, label in [("densenet121_run1_best.keras", "Multiclass"), 
-                         ("densenet121_binary_best.keras", "Binary")]:
+    # Check if models are already cached
+    for path, label in [("densenet121_run1_best_fixed.keras", "Multiclass"), 
+                         ("densenet121_binary_best_fixed.keras", "Binary")]:
         if os.path.exists(path):
             size_mb = os.path.getsize(path) / (1024 * 1024)
             issues.append(f"✅ {label} model cached: ({size_mb:.1f} MB)")
         else:
             issues.append(f"🔄 {label} model will be downloaded from Hugging Face")
     
-    issues.append("🔗 Models will load from: huggingface.co/NdahTah/MoldTwoPhaseClassification")
     return issues
 
-# ── Preprocessing (unchanged) ─────────────────────────────────────────────────
+# ── Preprocessing ─────────────────────────────────────────────────────────────
 def preprocess(image: Image.Image) -> np.ndarray:
     from tensorflow.keras.applications.densenet import preprocess_input
     image = image.convert("RGB")
@@ -113,7 +118,7 @@ def preprocess(image: Image.Image) -> np.ndarray:
     arr   = preprocess_input(arr)
     return arr
 
-# ── UI (mostly unchanged) ─────────────────────────────────────────────────────
+# ── UI ────────────────────────────────────────────────────────────────────────
 st.title("🍎 Fruit & Mould Classifier")
 st.markdown(
     "Upload an image of a fruit or food item. "
