@@ -14,7 +14,7 @@ st.set_page_config(
 
 # ── Model paths (relative to repo root) ───────────────────────────────────────
 MULTICLASS_MODEL_PATH = "densenet121_run1_best.keras"
-BINARY_MODEL_PATH     = "densenet121_binary_run1_best.keras"
+BINARY_MODEL_PATH     = "densenet121_binary_best.keras"
 
 # ── Class labels ──────────────────────────────────────────────────────────────
 FRUIT_CLASSES = [
