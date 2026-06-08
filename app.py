@@ -5,6 +5,7 @@ from PIL import Image
 import requests
 import os
 from tensorflow.keras.models import load_model
+from tensorflow.keras.applications.densenet import preprocess_input
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -13,10 +14,9 @@ st.set_page_config(
     layout="centered"
 )
 
-# ── Hugging Face model URLs (UPDATED with fixed models) ──────────────────────
-# NOTE: Changed from /blob/ to /resolve/ for direct download
-MULTICLASS_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_run1_best_fixed.keras"
-BINARY_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_best_fixed.keras"
+# ── Hugging Face model URLs (USING .h5 FILES) ─────────────────────────────────
+MULTICLASS_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_multiclass_final.h5"
+BINARY_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_final.h5"
 
 # ── Class labels ──────────────────────────────────────────────────────────────
 FRUIT_CLASSES = [
@@ -25,30 +25,26 @@ FRUIT_CLASSES = [
     'Raspberry', 'Toast', 'Tomatoes'
 ]
 
-MOLD_CLASSES = ['Mold', 'No mold']
-
 # ── Download model from Hugging Face ──────────────────────────────────────────
 @st.cache_resource
 def download_model(url, filename):
     """Download model from Hugging Face if not already downloaded"""
     if not os.path.exists(filename):
-        with st.spinner(f"Downloading {filename}..."):
+        with st.spinner(f"Downloading {filename} (33 MB)..."):
             response = requests.get(url, stream=True)
             response.raise_for_status()
             
-            # Show download progress
             total_size = int(response.headers.get('content-length', 0))
             with open(filename, 'wb') as f:
                 if total_size == 0:
                     f.write(response.content)
                 else:
                     downloaded = 0
-                    for data in response.iter_content(chunk_size=4096):
+                    for data in response.iter_content(chunk_size=8192):
                         downloaded += len(data)
                         f.write(data)
                         progress = (downloaded / total_size) * 100
-                        st.sidebar.text(f"Downloading {filename}: {progress:.1f}%")
-    
+                        st.sidebar.text(f"Downloading: {progress:.1f}%")
     return filename
 
 # ── Load models ───────────────────────────────────────────────────────────────
@@ -58,64 +54,36 @@ def load_models():
     
     try:
         # Download models from Hugging Face
-        multiclass_path = download_model(MULTICLASS_MODEL_URL, "densenet121_run1_best_fixed.keras")
-        binary_path = download_model(BINARY_MODEL_URL, "densenet121_binary_best_fixed.keras")
+        multiclass_path = download_model(MULTICLASS_MODEL_URL, "densenet121_multiclass_final.h5")
+        binary_path = download_model(BINARY_MODEL_URL, "densenet121_binary_final.h5")
         
-        # Load models with compile=False to avoid compatibility issues
+        # Load models
         multiclass_model = load_model(multiclass_path, compile=False)
         binary_model = load_model(binary_path, compile=False)
         
-        # Verify output shapes match expectations
+        # Verify output shapes
         mc_output_shape = multiclass_model.output_shape
         bin_output_shape = binary_model.output_shape
         
-        st.sidebar.success(f"✅ Models loaded successfully!")
-        st.sidebar.text(f"Multiclass output: {mc_output_shape}")
-        st.sidebar.text(f"Binary output: {bin_output_shape}")
-        
         if mc_output_shape[-1] != 11:
-            raise ValueError(
-                f"Multiclass model output shape is {mc_output_shape} — "
-                f"expected 11 classes."
-            )
+            raise ValueError(f"Expected 11 classes, got {mc_output_shape[-1]}")
         if bin_output_shape[-1] != 1:
-            raise ValueError(
-                f"Binary model output shape is {bin_output_shape} — "
-                f"expected 1 output (sigmoid)."
-            )
+            raise ValueError(f"Expected 1 output, got {bin_output_shape[-1]}")
         
+        st.sidebar.success("✅ Models loaded successfully!")
         return multiclass_model, binary_model
         
     except Exception as e:
         st.error(f"Failed to load models: {str(e)}")
-        st.error("Please check your internet connection and try again.")
         st.stop()
-
-# ── Model verification ────────────────────────────────────────────────────────
-def verify_models():
-    issues = []
-    issues.append("🔗 Models will load from: huggingface.co/NdahTah/MoldTwoPhaseClassification")
-    issues.append("📦 Using fixed model files")
-    
-    # Check if models are already cached
-    for path, label in [("densenet121_run1_best_fixed.keras", "Multiclass"), 
-                         ("densenet121_binary_best_fixed.keras", "Binary")]:
-        if os.path.exists(path):
-            size_mb = os.path.getsize(path) / (1024 * 1024)
-            issues.append(f"✅ {label} model cached: ({size_mb:.1f} MB)")
-        else:
-            issues.append(f"🔄 {label} model will be downloaded from Hugging Face")
-    
-    return issues
 
 # ── Preprocessing ─────────────────────────────────────────────────────────────
 def preprocess(image: Image.Image) -> np.ndarray:
-    from tensorflow.keras.applications.densenet import preprocess_input
     image = image.convert("RGB")
     image = image.resize((224, 224))
-    arr   = np.array(image, dtype=np.float32)
-    arr   = np.expand_dims(arr, axis=0)
-    arr   = preprocess_input(arr)
+    arr = np.array(image, dtype=np.float32)
+    arr = np.expand_dims(arr, axis=0)
+    arr = preprocess_input(arr)
     return arr
 
 # ── UI ────────────────────────────────────────────────────────────────────────
@@ -131,12 +99,8 @@ st.divider()
 # ── Model status sidebar ──────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 🔍 Model Status")
-    for msg in verify_models():
-        st.markdown(msg)
-    
-    st.markdown("---")
-    st.markdown("### 📦 Model Source")
-    st.markdown("Models hosted on [Hugging Face](https://huggingface.co/NdahTah/MoldTwoPhaseClassification)")
+    st.markdown("📦 Using .h5 model files for better compatibility")
+    st.markdown("🔗 [Model Repository](https://huggingface.co/NdahTah/MoldTwoPhaseClassification)")
 
 uploaded_file = st.file_uploader(
     "Upload an image", type=["jpg", "jpeg", "png", "bmp", "webp"]
@@ -153,12 +117,11 @@ if uploaded_file is not None:
     
     with col2:
         
-        with st.spinner("Loading models from Hugging Face..."):
+        with st.spinner("Loading models (first time may take 1-2 minutes)..."):
             try:
                 multiclass_model, binary_model = load_models()
                 st.sidebar.success("✅ Both models loaded successfully")
             except Exception as e:
-                st.sidebar.error(f"❌ Failed to load models: {e}")
                 st.error(f"Model loading failed: {e}")
                 st.stop()
         
@@ -168,19 +131,19 @@ if uploaded_file is not None:
         st.subheader("Stage 1 — Food Type")
         
         with st.spinner("Identifying food type..."):
-            mc_preds  = multiclass_model.predict(arr, verbose=0)
-            mc_idx    = int(np.argmax(mc_preds[0]))
-            mc_label  = FRUIT_CLASSES[mc_idx]
-            mc_conf   = float(mc_preds[0][mc_idx]) * 100
+            mc_preds = multiclass_model.predict(arr, verbose=0)
+            mc_idx = int(np.argmax(mc_preds[0]))
+            mc_label = FRUIT_CLASSES[mc_idx]
+            mc_conf = float(mc_preds[0][mc_idx]) * 100
         
         st.success(f"**{mc_label}**")
         st.caption(f"Confidence: {mc_conf:.1f}%")
         
-        top3_idx  = np.argsort(mc_preds[0])[::-1][:3]
+        top3_idx = np.argsort(mc_preds[0])[::-1][:3]
         st.markdown("**Top 3 predictions:**")
         for idx in top3_idx:
             label = FRUIT_CLASSES[idx]
-            conf  = float(mc_preds[0][idx]) * 100
+            conf = float(mc_preds[0][idx]) * 100
             st.progress(int(conf), text=f"{label}: {conf:.1f}%")
         
         st.divider()
@@ -189,8 +152,8 @@ if uploaded_file is not None:
         st.subheader("Stage 2 — Mould Detection")
         
         with st.spinner("Checking for mould..."):
-            bin_pred  = binary_model.predict(arr, verbose=0)
-            bin_prob  = float(bin_pred[0][0])
+            bin_pred = binary_model.predict(arr, verbose=0)
+            bin_prob = float(bin_pred[0][0])
             
             if bin_prob < 0.5:
                 bin_label = "Mold"
@@ -250,6 +213,5 @@ else:
             "DenseNet121 binary classifier:\n\n"
             "- 🔴 Mold detected\n"
             "- 🟢 No mold detected\n\n"
-            "Both models trained on a dataset of ~4,300 images "
-            "split 70/15/15 for train, validation and test."
+            "Models hosted on Hugging Face as .h5 files."
         )
