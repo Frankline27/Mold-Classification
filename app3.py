@@ -16,14 +16,13 @@ st.set_page_config(
     layout="centered"
 )
 
-# ── Hugging Face model URLs (All 6 models) ───────────────────────────────────
-# Food Classification Models
-DENSENET_FOOD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_run5_best_final.h5"
+# Food Classification Models (Multiclass)
+DENSENET_FOOD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_multiclass_final.h5"
 EFFICIENTNET_FOOD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/efficientnetb0_run5_best_final.h5"
 MOBILENET_FOOD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/mobilenetv2_run5_best_final.h5"
 
-# Mould Detection Models
-DENSENET_MOLD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_run5_best_final.h5"
+# Mould Detection Models (Binary)
+DENSENET_MOLD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_final.h5"
 EFFICIENTNET_MOLD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/efficientnetb0_binary_run5_best_final.h5"
 MOBILENET_MOLD_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/mobilenetv2_binary_run5_best_final.h5"
 
