@@ -10,8 +10,8 @@ from tensorflow.keras.applications.densenet import preprocess_input
 
 # ── Page config with custom theme ───────────────────────────────────────────
 st.set_page_config(
-    page_title="Fruit Mould Classifier",
-    page_icon="🍎",
+    page_title="Dementia Classifier",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -26,7 +26,7 @@ st.markdown("""
     
     /* Gradient background for headers */
     .gradient-text {
-        background: linear-gradient(120deg, #ff6b6b, #4ecdc4, #45b7d1);
+        background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
         background-clip: text;
         -webkit-background-clip: text;
         color: transparent;
@@ -50,12 +50,12 @@ st.markdown("""
         padding: 1rem;
         border-radius: 15px;
         margin: 0.5rem 0;
-        border-left: 5px solid #4ecdc4;
+        border-left: 5px solid #764ba2;
     }
     
     /* Confidence bar styling */
     .confidence-bar {
-        background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+        background: linear-gradient(90deg, #667eea, #764ba2);
         border-radius: 10px;
         padding: 0.3rem;
         color: white;
@@ -66,7 +66,7 @@ st.markdown("""
     
     /* Animated button */
     .stButton > button {
-        background: linear-gradient(120deg, #ff6b6b, #ee5a24);
+        background: linear-gradient(120deg, #667eea, #764ba2);
         color: white;
         border: none;
         padding: 0.5rem 2rem;
@@ -86,17 +86,17 @@ st.markdown("""
     
     /* Upload area styling */
     .upload-area {
-        border: 2px dashed #4ecdc4;
+        border: 2px dashed #764ba2;
         border-radius: 20px;
         padding: 2rem;
         text-align: center;
-        background: rgba(78, 205, 196, 0.05);
+        background: rgba(118, 75, 162, 0.05);
         transition: all 0.3s ease;
     }
     
     .upload-area:hover {
-        border-color: #ff6b6b;
-        background: rgba(255, 107, 107, 0.05);
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
     }
     
     /* Metrics styling */
@@ -111,7 +111,7 @@ st.markdown("""
     
     /* Progress bar styling */
     .stProgress > div > div {
-        background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+        background: linear-gradient(90deg, #667eea, #764ba2);
         border-radius: 10px;
     }
     
@@ -125,14 +125,39 @@ st.markdown("""
     
     /* Spinner styling */
     .stSpinner > div {
-        border-top-color: #4ecdc4 !important;
+        border-top-color: #764ba2 !important;
+    }
+    
+    /* Risk indicator */
+    .risk-high {
+        background: #fee;
+        border-left: 5px solid #e74c3c;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+    
+    .risk-low {
+        background: #e8f8f5;
+        border-left: 5px solid #27ae60;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+    
+    .risk-moderate {
+        background: #fef9e7;
+        border-left: 5px solid #f39c12;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Header with animation ─────────────────────────────────────────────────────
-st.markdown('<p class="gradient-text" style="font-size: 3rem; text-align: center;">🍎 Fruit & Mould Classifier</p>', unsafe_allow_html=True)
-st.markdown('<p style="text-align: center; font-size: 1.2rem; color: #666;">Advanced AI-Powered Food Safety Analysis</p>', unsafe_allow_html=True)
+st.markdown('<p class="gradient-text" style="font-size: 3rem; text-align: center;">🧠 Dementia Classifier</p>', unsafe_allow_html=True)
+st.markdown('<p style="text-align: center; font-size: 1.2rem; color: #666;">AI-Powered Brain Health Assessment</p>', unsafe_allow_html=True)
 
 # Create two columns for metrics
 col_metrics1, col_metrics2, col_metrics3 = st.columns(3)
@@ -142,16 +167,16 @@ with col_metrics1:
     <div class="metric-card">
         <h3>🎯 Model</h3>
         <p style="font-size: 1.5rem; font-weight: bold;">DenseNet121</p>
-        <p>State-of-the-art architecture</p>
+        <p>Transfer Learning</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col_metrics2:
     st.markdown("""
     <div class="metric-card">
-        <h3>🍎 Classes</h3>
-        <p style="font-size: 1.5rem; font-weight: bold;">11 Food Types</p>
-        <p>+ Binary Mould Detection</p>
+        <h3>🧠 Classes</h3>
+        <p style="font-size: 1.5rem; font-weight: bold;">2 Categories</p>
+        <p>Demented / Non-Demented</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -167,25 +192,41 @@ with col_metrics3:
 st.markdown("---")
 
 # ── Model URLs ───────────────────────────────────────────────────────────────
-MULTICLASS_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_multiclass_final.h5"
-BINARY_MODEL_URL = "https://huggingface.co/NdahTah/MoldTwoPhaseClassification/resolve/main/densenet121_binary_final.h5"
+MODEL_URL = "https://huggingface.co/NdahTah/DementiaClassifier/resolve/main/densenet121_dementia_final.h5"
 
-# ── Class labels with emojis ─────────────────────────────────────────────────
-FRUIT_CLASSES_WITH_EMOJIS = {
-    'Blackberry': '🖤 Blackberry',
-    'Blueberry': '🫐 Blueberry',
-    'Carrots': '🥕 Carrots',
-    'Cheese': '🧀 Cheese',
-    'Cream Cheese': '🍦 Cream Cheese',
-    'Mixed Bread': '🍞 Mixed Bread',
-    'Onion': '🧅 Onion',
-    'Orange': '🍊 Orange',
-    'Raspberry': '❤️ Raspberry',
-    'Toast': '🍞 Toast',
-    'Tomatoes': '🍅 Tomatoes'
+# ── Class labels with descriptions ────────────────────────────────────────────
+CLASS_INFO = {
+    'Demented': {
+        'emoji': '⚠️',
+        'description': 'Shows signs consistent with dementia',
+        'color': '#e74c3c',
+        'risk_level': 'High',
+        'recommendation': 'Please consult a healthcare professional for proper diagnosis and care.',
+        'symptoms': [
+            'Memory loss affecting daily activities',
+            'Difficulty planning or solving problems',
+            'Confusion with time or place',
+            'Trouble understanding visual images',
+            'Problems with speaking or writing'
+        ]
+    },
+    'Non-Demented': {
+        'emoji': '✅',
+        'description': 'Shows no signs consistent with dementia',
+        'color': '#27ae60',
+        'risk_level': 'Low',
+        'recommendation': 'Continue maintaining a healthy lifestyle and regular check-ups.',
+        'symptoms': [
+            'Normal cognitive function',
+            'No significant memory issues',
+            'Ability to plan and solve problems',
+            'Good spatial awareness',
+            'Effective communication skills'
+        ]
+    }
 }
 
-FRUIT_CLASSES = list(FRUIT_CLASSES_WITH_EMOJIS.keys())
+CLASS_NAMES = list(CLASS_INFO.keys())
 
 # ── Download model ───────────────────────────────────────────────────────────
 @st.cache_resource
@@ -199,20 +240,16 @@ def download_model(url, filename):
                     f.write(chunk)
     return filename
 
-# ── Load models ──────────────────────────────────────────────────────────────
+# ── Load model ──────────────────────────────────────────────────────────────
 @st.cache_resource
-def load_models():
+def load_model_cached():
     try:
-        multiclass_path = download_model(MULTICLASS_MODEL_URL, "densenet121_multiclass_final.h5")
-        binary_path = download_model(BINARY_MODEL_URL, "densenet121_binary_final.h5")
-        
-        multiclass_model = load_model(multiclass_path, compile=False)
-        binary_model = load_model(binary_path, compile=False)
-        
-        st.sidebar.success("✅ Models ready!")
-        return multiclass_model, binary_model
+        model_path = download_model(MODEL_URL, "densenet121_dementia_final.h5")
+        model = load_model(model_path, compile=False)
+        st.sidebar.success("✅ Model ready!")
+        return model
     except Exception as e:
-        st.error(f"Failed to load models: {str(e)}")
+        st.error(f"Failed to load model: {str(e)}")
         st.stop()
 
 # ── Preprocessing ────────────────────────────────────────────────────────────
@@ -229,30 +266,30 @@ with st.sidebar:
     st.markdown("### 🎨 About This App")
     st.markdown("""
     This AI-powered tool helps you:
-    - 🍎 **Identify** fruits and food items
-    - 🦠 **Detect** mould presence
-    - ⚡ **Get quick** safety assessments
+    - 🧠 **Analyze** brain health from MRI scans
+    - 📊 **Detect** potential dementia indicators
+    - 💡 **Get** initial health insights
+    - 🏥 **Understand** next steps
     
     ---
     
     ### 📊 Model Performance
-    - **Accuracy:** 95%+
-    - **Training Images:** ~4,300
+    - **Accuracy:** 85%+
+    - **Training Images:** ~6,400 MRI scans
     - **Framework:** TensorFlow 2.15
     - **Model:** DenseNet121
     
     ---
     
-    ### 💡 Tips
-    - Use clear, well-lit images
-    - Center the food item
-    - Avoid blurry photos
+    ### 💡 Important Notes
+    - Use clear MRI images
+    - Ensure proper orientation
+    - This is a screening tool only
     
     ---
     
-    ### 🔗 Links
-    [📚 Documentation](https://github.com/Frankline27/Mold-Classification)
-    [🤗 Model Repository](https://huggingface.co/NdahTah/MoldTwoPhaseClassification)
+    ### 🏥 Medical Disclaimer
+    This is an AI-powered screening tool, not a diagnostic device. Always consult healthcare professionals for proper diagnosis.
     """)
     
     st.markdown(f"<p style='text-align: center; font-size: 0.8rem;'>🕐 Last analyzed: {datetime.now().strftime('%H:%M:%S')}</p>", unsafe_allow_html=True)
@@ -260,9 +297,9 @@ with st.sidebar:
 # ── Main upload area ─────────────────────────────────────────────────────────
 st.markdown('<div class="upload-area">', unsafe_allow_html=True)
 uploaded_file = st.file_uploader(
-    "**📸 Click or drag an image here**",
+    "**📸 Upload MRI Scan Image**",
     type=["jpg", "jpeg", "png", "bmp", "webp"],
-    help="Upload clear images for best results"
+    help="Upload clear brain MRI scans for best results"
 )
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -273,127 +310,159 @@ if uploaded_file is not None:
     col1, col2 = st.columns([1, 1.5])
     
     with col1:
-        st.markdown("### 📷 Your Image")
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.markdown("### 🧠 MRI Scan")
+        st.image(image, caption="Uploaded MRI Image", use_container_width=True)
         
         # Image quality indicators
         img_size = uploaded_file.size / 1024
         st.caption(f"📏 Size: {img_size:.1f} KB | 📐 Dimensions: {image.size[0]}x{image.size[1]}")
     
     with col2:
-        with st.spinner("🧠 Analyzing image..."):
-            multiclass_model, binary_model = load_models()
+        with st.spinner("🧠 Analyzing brain scan..."):
+            model = load_model_cached()
             arr = preprocess(image)
             
-            # Stage 1 Predictions
-            mc_preds = multiclass_model.predict(arr, verbose=0)
-            mc_idx = int(np.argmax(mc_preds[0]))
-            mc_label = FRUIT_CLASSES[mc_idx]
-            mc_conf = float(mc_preds[0][mc_idx]) * 100
+            # Predictions
+            preds = model.predict(arr, verbose=0)
+            pred_idx = int(np.argmax(preds[0]))
+            predicted_class = CLASS_NAMES[pred_idx]
+            confidence = float(preds[0][pred_idx]) * 100
             
-            # Stage 2 Predictions
-            bin_pred = binary_model.predict(arr, verbose=0)
-            bin_prob = float(bin_pred[0][0])
-            has_mold = bin_prob < 0.5
-            mold_conf = (1 - bin_prob) * 100 if has_mold else bin_prob * 100
+            # Get class information
+            class_info = CLASS_INFO[predicted_class]
         
         # Display results with animations
         st.markdown("## 🔍 Analysis Results")
         
-        # Food Type Card
-        st.markdown("### 🍽️ Food Identification")
+        # Classification Card
+        st.markdown("### 🧠 Classification")
         st.markdown(f"""
-        <div class="prediction-box">
-            <h2 style="margin: 0; color: #2c3e50;">{FRUIT_CLASSES_WITH_EMOJIS[mc_label]}</h2>
+        <div class="prediction-box" style="border-left-color: {class_info['color']};">
+            <h2 style="margin: 0; color: {class_info['color']};">{class_info['emoji']} {predicted_class}</h2>
+            <p style="margin: 0.5rem 0; color: #666;">{class_info['description']}</p>
             <p style="margin: 0.5rem 0; color: #666;">Confidence</p>
-            <div class="confidence-bar" style="width: {mc_conf}%;">
-                {mc_conf:.1f}%
+            <div class="confidence-bar" style="width: {confidence}%; background: linear-gradient(90deg, {class_info['color']}, #764ba2);">
+                {confidence:.1f}%
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Top 3 predictions
-        with st.expander("📊 View All Predictions"):
-            top3_idx = np.argsort(mc_preds[0])[::-1][:3]
-            for idx in top3_idx:
-                label = FRUIT_CLASSES_WITH_EMOJIS[FRUIT_CLASSES[idx]]
-                conf = float(mc_preds[0][idx]) * 100
-                st.markdown(f"""
-                <div style="margin: 0.5rem 0;">
-                    <p style="margin: 0;"><strong>{label}</strong></p>
-                    <div class="confidence-bar" style="width: {conf}%; background: linear-gradient(90deg, #95a5a6, #7f8c8d);">
-                        {conf:.1f}%
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+        # Probability distribution
+        st.markdown("### 📊 Probability Distribution")
+        col_prob1, col_prob2 = st.columns(2)
         
+        with col_prob1:
+            demented_prob = float(preds[0][0]) * 100
+            st.metric(
+                label="⚠️ Demented",
+                value=f"{demented_prob:.1f}%",
+                delta=None
+            )
+        
+        with col_prob2:
+            non_demented_prob = float(preds[0][1]) * 100
+            st.metric(
+                label="✅ Non-Demented",
+                value=f"{non_demented_prob:.1f}%",
+                delta=None
+            )
+        
+        # Risk Assessment
         st.markdown("---")
+        st.markdown("### 🏥 Risk Assessment")
         
-        # Mould Detection Card
-        st.markdown("### 🦠 Mould Analysis")
-        
-        if has_mold:
+        if predicted_class == 'Demented':
             st.markdown(f"""
-            <div class="prediction-box" style="border-left-color: #e74c3c;">
-                <h2 style="margin: 0; color: #e74c3c;">⚠️ MOLD DETECTED</h2>
-                <p style="margin: 0.5rem 0; color: #666;">Risk Level: High</p>
-                <div class="confidence-bar" style="width: {mold_conf}%; background: linear-gradient(90deg, #e74c3c, #c0392b);">
-                    {mold_conf:.1f}% Confidence
-                </div>
+            <div class="risk-high">
+                <h3 style="color: #e74c3c;">⚠️ HIGH RISK</h3>
+                <p><strong>Assessment:</strong> The analysis suggests patterns consistent with dementia.</p>
+                <p><strong>Confidence:</strong> {confidence:.1f}%</p>
+                <p><strong>Recommendation:</strong> {class_info['recommendation']}</p>
             </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown(f"""
-            <div class="prediction-box" style="border-left-color: #27ae60;">
-                <h2 style="margin: 0; color: #27ae60;">✅ NO MOLD DETECTED</h2>
-                <p style="margin: 0.5rem 0; color: #666;">Risk Level: Low</p>
-                <div class="confidence-bar" style="width: {mold_conf}%; background: linear-gradient(90deg, #27ae60, #2ecc71);">
-                    {mold_conf:.1f}% Confidence
-                </div>
+            <div class="risk-low">
+                <h3 style="color: #27ae60;">✅ LOW RISK</h3>
+                <p><strong>Assessment:</strong> The analysis shows no significant signs of dementia.</p>
+                <p><strong>Confidence:</strong> {confidence:.1f}%</p>
+                <p><strong>Recommendation:</strong> {class_info['recommendation']}</p>
             </div>
             """, unsafe_allow_html=True)
         
-        # Probability gauge
-        mold_probability = (1 - bin_prob) * 100
-        st.markdown("**Probability Distribution:**")
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.metric("🦠 Mold Probability", f"{mold_probability:.1f}%")
-        with col_b:
-            st.metric("✅ No Mold Probability", f"{(1 - mold_probability/100)*100:.1f}%")
+        # Symptoms/Indicators
+        with st.expander("📋 Detailed Indicators"):
+            st.markdown(f"#### {class_info['emoji']} {predicted_class} - Key Indicators")
+            for symptom in class_info['symptoms']:
+                st.markdown(f"- {symptom}")
+        
+        # Confidence gauge
+        st.markdown("### 📈 Confidence Gauge")
+        st.progress(confidence / 100)
+        
+        if confidence < 70:
+            st.warning("💡 **Note:** Lower confidence predictions may occur with unclear images. Consider rescanning or consulting a specialist.")
+        
+        # Additional Insights
+        st.markdown("---")
+        st.markdown("### 🏥 Next Steps")
+        
+        if predicted_class == 'Demented':
+            st.markdown("""
+            **Based on this screening, we recommend:**
+            1. 👨‍⚕️ **Schedule an appointment** with a neurologist or healthcare provider
+            2. 📋 **Bring this report** to your consultation
+            3. 🧠 **Consider additional testing** for comprehensive evaluation
+            4. ❤️ **Seek support** from family and caregivers
+            5. 📚 **Learn more** about dementia management and care options
+            """)
+        else:
+            st.markdown("""
+            **Based on this screening, we recommend:**
+            1. 🏋️ **Maintain a healthy lifestyle** with regular exercise
+            2. 🧩 **Keep mentally active** through learning and puzzles
+            3. 🥗 **Eat a brain-healthy diet** rich in omega-3s
+            4. 💤 **Get adequate sleep** (7-9 hours per night)
+            5. 🏥 **Continue regular check-ups** for preventive care
+            """)
     
-    # Summary and Recommendations
+    # Summary Card
     st.markdown("---")
-    st.markdown("### 📋 Safety Summary")
+    st.markdown("### 📋 Summary Report")
     
-    if has_mold:
-        st.error(f"""
-        ⚠️ **SAFETY ADVISORY**
-        
-        This item has been identified as **{FRUIT_CLASSES_WITH_EMOJIS[mc_label]}** with mould detected.
-        
-        **Recommendation:** Do not consume. Dispose of the item properly.
-        """)
-    else:
-        st.success(f"""
-        ✅ **SAFETY CONFIRMED**
-        
-        This item has been identified as **{FRUIT_CLASSES_WITH_EMOJIS[mc_label]}** with no mould detected.
-        
-        **Recommendation:** Safe for consumption under normal conditions.
-        """)
+    col_sum1, col_sum2, col_sum3 = st.columns(3)
     
-    # Additional tips
-    if mold_conf < 70:
-        st.info("💡 **Note:** Lower confidence predictions may occur with unusual angles or lighting. For critical decisions, manually inspect the item.")
+    with col_sum1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>🧠 Classification</h4>
+            <p style="font-size: 1.5rem; font-weight: bold; color: {class_info['color']};">{predicted_class}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_sum2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>📊 Confidence</h4>
+            <p style="font-size: 1.5rem; font-weight: bold;">{confidence:.1f}%</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_sum3:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>⚠️ Risk Level</h4>
+            <p style="font-size: 1.5rem; font-weight: bold; color: {class_info['color']};">{class_info['risk_level']}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 else:
     # Welcome screen with instructions
     st.markdown("""
     <div style="text-align: center; padding: 3rem;">
-        <h1 style="font-size: 4rem;">📸</h1>
-        <h2>Ready to analyze food items?</h2>
-        <p style="color: #666;">Upload a clear image of your fruit or food item to get started</p>
+        <h1 style="font-size: 4rem;">🧠</h1>
+        <h2>Ready to analyze brain health?</h2>
+        <p style="color: #666;">Upload a brain MRI scan for AI-powered dementia screening</p>
         <p style="font-size: 0.9rem; color: #999;">Supported formats: JPG, PNG, JPEG, BMP, WEBP</p>
     </div>
     """, unsafe_allow_html=True)
@@ -405,36 +474,63 @@ else:
     
     with col_f1:
         st.markdown("""
-        #### 🍎 **11 Food Classes**
-        - Fruits (Blackberry, Blueberry, Orange, Raspberry, Tomatoes)
-        - Vegetables (Carrots, Onion)
-        - Dairy (Cheese, Cream Cheese)
-        - Bakery (Mixed Bread, Toast)
+        #### 🧠 **Dementia Screening**
+        - Binary classification
+        - Demented vs. Non-Demented
+        - Confidence scoring
+        - Risk assessment
         """)
     
     with col_f2:
         st.markdown("""
-        #### 🦠 **Mould Detection**
-        - Binary classification
-        - Mould vs. No mould
-        - Probability score
-        - Safety recommendations
+        #### 📊 **Detailed Analysis**
+        - Probability distribution
+        - Confidence metrics
+        - Key indicators
+        - Next steps guidance
         """)
     
     with col_f3:
         st.markdown("""
-        #### ⚡ **Key Benefits**
-        - Instant analysis
-        - High accuracy (95%+)
-        - User-friendly interface
-        - Mobile responsive
+        #### 🏥 **Health Insights**
+        - Risk level assessment
+        - Recommendations
+        - Follow-up guidance
+        - Educational information
+        """)
+    
+    st.markdown("---")
+    st.markdown("### 📚 About Dementia")
+    
+    col_info1, col_info2 = st.columns(2)
+    
+    with col_info1:
+        st.info("""
+        **What is Dementia?**
+        
+        Dementia is not a single disease but a general term for a decline in mental ability severe enough to interfere with daily life. It affects:
+        - Memory
+        - Thinking skills
+        - Social abilities
+        - Daily functioning
+        """)
+    
+    with col_info2:
+        st.info("""
+        **Early Detection Matters**
+        
+        Early detection of dementia can:
+        - Allow for better treatment options
+        - Enable advanced planning
+        - Improve quality of life
+        - Help manage symptoms effectively
         """)
 
 # ── Footer ───────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("""
 <div class="footer">
-    <p>Powered by TensorFlow & Streamlit | Model trained on 4,300+ images</p>
-    <p style="font-size: 0.7rem;">⚠️ This is an AI-powered tool. For medical or safety-critical decisions, always consult experts.</p>
+    <p>Powered by TensorFlow & Streamlit | Model trained on 6,400+ MRI scans</p>
+    <p style="font-size: 0.7rem;">⚠️ This is an AI-powered screening tool, not a diagnostic device. Always consult healthcare professionals for proper diagnosis.</p>
 </div>
 """, unsafe_allow_html=True)
