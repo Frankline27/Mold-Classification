@@ -146,11 +146,16 @@ experimental integrity and prevent data leakage:
 ---
 
 ## Reproducibility for (requirement.txt)
-streamlit
-tensorflow-cpu==2.15.0
-numpy
-pillow
-requests
+streamlit,
+
+tensorflow-cpu==2.15.0,
+
+numpy,
+
+pillow,
+
+requests,
+
 h5py==3.10.0
 
 ### Environment
