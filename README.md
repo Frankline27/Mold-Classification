@@ -38,24 +38,24 @@ Mold-Classification/
 ├── Hybrid CNN + KNN / SVM Pipelines
 │   ├── CNN6SVMKNN.ipynb            # Custom 6-layered CNN + KNN / SVM
 │   ├── CNN9SVMKNN.ipynb            # Custom 9-layered CNN + KNN / SVM
-│   ├── CustomCNN9SVMKNN.ipynb      # Custom 9-layered CNN + KNN / SVM (variant)
+│   ├── CustomCNN9SVMKNN.ipynb      # Custom 9-layered CNN + KNN / SVM 
 │   ├── VGG19SVMKNN.ipynb           # VGG19 + KNN / SVM
 │   ├── MobileNetV2SVMKNN.ipynb     # MobileNetV2 + KNN / SVM
 │   ├── EfficientNetB0SVMKNN.ipynb  # EfficientNetB0 + KNN / SVM
-│   ├── EfficientNetBoSVMKNN.ipynb  # EfficientNetB0 + KNN / SVM (variant)
+│   ├── EfficientNetBoSVMKNN.ipynb  # EfficientNetB0 + KNN / SVM 
 │   ├── DenseNet121SVMKNN.ipynb     # DenseNet121 + KNN / SVM
-│   ├── DenseNetSVMKNN.ipynb        # DenseNet121 + KNN / SVM (variant)
+│   ├── DenseNetSVMKNN.ipynb        # DenseNet121 + KNN / SVM 
 │   ├── ResNet50SVMKNN.ipynb        # ResNet50 + KNN / SVM
 │   └── ResNet101SVMKNN.ipynb       # ResNet101 + KNN / SVM
 │
 ├── Deployment
 │   ├── app.py                      # Main Streamlit deployment app
-│   ├── app2.py                     # Binary Deployment app (variant)
-│   └── app3.py                     # Multiclass Deployment app (variant)
+│   ├── app2.py                     # Binary Deployment app 
+│   └── app3.py                     # Multiclass Deployment app 
 │
 ├── Data Splitting
 │   ├── split.ipynb                 # Dataset splitting utility Binary
-│   └── split_data.ipynb            # Dataset splitting utility Multiclass (variant)
+│   └── split_data.ipynb            # Dataset splitting utility Multiclass 
 │
 ├── Model Weights (in-repo)
 │   ├── efficientnetb0_binary_run5_best.keras
